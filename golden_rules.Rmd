@@ -39,8 +39,6 @@ for (file in scripts_files) if (!file == load_dictionary) source(file)
 
 
 
-
-
 ### 1. Write for your audience
 
 Make sure your report or exported data will be useful for your audience
@@ -90,7 +88,7 @@ Confidence intervals should be used:
 
 
 
-```{}
+```
 
  -------------------------    |Yes|----- **Include Confidence Interval**
 |                         |     |  
@@ -106,12 +104,12 @@ Confidence intervals should be used:
 
 
 ```{r eval = TRUE, fig.height = 1.5, fig.width = 4, fig.pos = "center"}
-ebola_sim <- readRDS(here("data", "raw", "outbreaks_ebola_sim_list.rds"))
+ebola_sim <- readRDS(here::here("data", "raw", "outbreaks_ebola_sim_list.rds"))
 date_onset <- ebola_sim$linelist$date_of_onset
 
 i.7 <- incidence(date_onset, interval = "1 week")
-fit.both <- fit(i.7, split=as.Date("2014-10-15"))
-plot(i.7, fit=fit.both)
+fit.both <- fit(i.7, split = as.Date("2014-10-15"))
+plot(i.7, fit = fit.both)
 
 print(fit.both)
 
@@ -196,28 +194,3 @@ Respect the privacy of the individuals described in the data
 Never label data as anonomysed without complying with best practices of the
 standards and methods of anonymyzation (and clear final product with a 
 qualified statistician)
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
