@@ -1,0 +1,223 @@
+---
+title: "Golden Rules for Reproducable Statistical Analyses"
+author: "Amy Gimma and Thibaut Jombart"
+date: "`r format(Sys.time(), '%A %d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: pygments
+    # number_sections: yes
+    theme: spacelab
+    # toc: yes
+    # toc_collapse: no
+    # toc_depth: 2
+    # toc_float: yes
+    # css: !expr here::here('css', 'style.css')
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      collapse = TRUE,
+                      fig.width = 8,
+                      fig.height = 6,
+                      dpi = 150,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+```{r read_scripts}
+
+## read scripts
+path_to_scripts <- here::here("scripts")
+
+scripts_files <- dir(path_to_scripts, pattern = ".R$",
+                     full.names = TRUE)
+load_dictionary <- here::here("scripts", "load_dictionary.R")
+for (file in scripts_files) if (!file == load_dictionary) source(file)
+
+```
+
+
+
+
+
+### 1. Write for your audience
+
+Make sure your report or exported data will be useful for your audience
+ </br>
+Know your audience's baseline understanding of the subject matter and statistical
+methods
+
+
+All data manipulation, statistical methodology, results, etc should be clear 
+without reading the code. Include formulas in the text when appropriate.
+
+### 2. Organize your document and each section
+
+Structure the document in a way that will make the most sense to the reader
+</br>
+Fully contain each step of the process into one section and use subsections 
+to organize the code (aviod distributing the steps of an analysis to different
+sections throughout the document)
+</br>
+Start with the most general dataset with crude analyses before 
+subsetted or stratified analyses
+
+
+### 3. Prepare the data early
+
+**Data preparation includes creating new columns, manipulating data, and formatting,
+corrections to spelling, dates, and formatting** Document all changes to the 
+underlying data in a dedicated section before any analyses.
+
+</br>
+Define, create, and describe all new and manipulated dataset columns before 
+starting the analysis
+
+### 4. Follow standard naming conventions
+
+Predictable naming helps streamline writing and reviewing code
+* *column names* should be lower snake case in utf-8 format without any special
+characters or acccents (ex: Use;  `Unité âge (mois, années)` )
+
+### 5. Show uncertainty
+
+Confidence intervals should be used: 
+
+1. to represet the uncertainty around generalisability from sample to population
+2. to represent uncertainty and variable conditions in data collection
+3. predictions and imputations
+
+
+
+```{}
+
+ -------------------------    |Yes|----- **Include Confidence Interval**
+|                         |     |  
+|     Might the value     |     |
+| observed be different   |-----|
+| with a larger sample?   |     |                 |Yes|--| **CI not required**
+|                         |     |    -----------   |
+ -------------------------    |No|--| You sure? |--|
+                                     -----------   |
+                                                  |No|-- **Ask a statistician!**
+```
+
+
+
+```{r eval = TRUE, fig.height = 1.5, fig.width = 4, fig.pos = "center"}
+ebola_sim <- readRDS(here("data", "raw", "outbreaks_ebola_sim_list.rds"))
+date_onset <- ebola_sim$linelist$date_of_onset
+
+i.7 <- incidence(date_onset, interval = "1 week")
+fit.both <- fit(i.7, split=as.Date("2014-10-15"))
+plot(i.7, fit=fit.both)
+
+print(fit.both)
+
+```
+
+### 6. Code systematically
+
+Be consistent in functions in libraries used
+
+* *use `linelist::clean_data`* with a data dictionary for cleaning dates,
+column names and values, etc. Take the time to understand how to use this 
+package and how it works.
+
+* for example choose between `n()`, `tally()`, and `count()` when summarizing 
+grouped data
+
+
+### 7. Always use relative paths
+
+Absolute paths will not work when the code is run on other computers. Use the
+`here` library with R project files to establish a root directory
+
+```{r eval = FALSE}
+
+# Use:
+read.csv(here::here("/data/file_name.csv")
+
+# NOT:
+read.csv("P://user/specific/path/to/shared/directory/data/file_name.csv")
+
+```
+
+### 8. Version and archive documents
+
+Use semantic versioning in a clearly organized, standardized file structure
+
+```
+.
++-- linelist_investigations
+|   +-- css
+|   +-- data
+|   +-- report_outputs
+|   +-- report_sources
+|       +-- aaa_clean_linelist_2019-29-09.Rmd
+|       +-- epicurve_2019-04-10.Rmd
+|       +-- _archive
+|           +-- epicurve_2019-23-09.Rmd
+|           +-- epicurve_2019-12-09.Rmd
+
+```
+
+### 9. Use descriptive naming
+
+Variables, functions, and data sets should be named in a way that describes the 
+object
+
+### 10. Prepare presentation-ready plots
+
+**Plots should be ready to copy and paste into an official presentation**
+
+* check labels for correct spelling, accents, and grammar 
+* uniform colors for variables throughout a document
+* text size large
+* avoid overlapping labels or other features
+
+
+
+### 11. Always have your code reviewed
+
+Ensure that:
+
+* Analysis is appropriate to setting and underlying data is well understood, 
+local collaborators should be included and acknowledged
+* statistical methodology is applied correctly
+* R code is readable and correctly implements methodology 
+* markdown and the report document are well organized and properly formatted
+
+### 12. Keep data safe
+
+Respect the privacy of the individuals described in the data
+
+Never label data as anonomysed without complying with best practices of the
+standards and methods of anonymyzation (and clear final product with a 
+qualified statistician)
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
