@@ -154,13 +154,17 @@ Confidence intervals should be used:
 
 ## Example
 
-```{r eval = TRUE, fig.height = 1.5, fig.width = 4, fig.pos = "center"}
+```{r eval = TRUE, fig.height = 4, fig.width = 8, fig.pos = "center"}
 ebola_sim <- readRDS(here::here("data", "raw", "outbreaks_ebola_sim_list.rds"))
 date_onset <- ebola_sim$linelist$date_of_onset
 
-i.7 <- incidence(date_onset, interval = "1 week")
+i.7 <- incidence::incidence(date_onset, interval = "1 week")
 fit.both <- fit(i.7, split = as.Date("2014-10-15"))
-plot(i.7, fit = fit.both)
+plot(i.7, fit = fit.both) +
+  labs(title = "Example Plot with Confidence Intervals") +
+  theme(text = element_text(size = 16),
+        axis.text = element_text(size = 14))
+  
 
 print(fit.both)
 
