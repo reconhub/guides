@@ -1,17 +1,17 @@
 ---
-title: "Golden Rules for Reproducable Statistical Analyses"
+title: "Golden Rules for Reproducible Statistical Analyses"
 author: "Amy Gimma and Thibaut Jombart"
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
 output:
   html_document:
     code_folding: hide
     highlight: pygments
-    # number_sections: yes
+    number_sections: yes
     theme: spacelab
-    # toc: yes
-    # toc_collapse: no
-    # toc_depth: 2
-    # toc_float: yes
+    toc: yes
+    toc_collapse: no
+    toc_depth: 2
+    toc_float: yes
     # css: !expr here::here('css', 'style.css')
 ---
 
@@ -38,53 +38,104 @@ for (file in scripts_files) if (!file == load_dictionary) source(file)
 ```
 
 
+<!-- Rule 1 -->
+# Write for your audience {.tabset .tabset-fade .tabset-pills}
 
-### 1. Write for your audience
-
-Make sure your report or exported data will be useful for your audience
- </br>
-Know your audience's baseline understanding of the subject matter and statistical
-methods
-
-
-All data manipulation, statistical methodology, results, etc should be clear 
+* Make sure your report or exported data will be useful for your audience
+* Know your audience's baseline understanding of the subject matter and statistical
+methods, and annotate results as needed.
+* All data manipulation, statistical methodology, results, etc should be clear 
 without reading the code. Include formulas in the text when appropriate.
 
-### 2. Organize your document and each section
+<!-- Rule 2 -->
+# Organize your document and each section {.tabset .tabset-fade .tabset-pills}
 
-Structure the document in a way that will make the most sense to the reader
-</br>
-Fully contain each step of the process into one section and use subsections 
+* Structure the document in a way that will make the most sense to the reader
+* Fully contain each step of the process into one section and use subsections 
 to organize the code (aviod distributing the steps of an analysis to different
 sections throughout the document)
-</br>
-Start with the most general dataset with crude analyses before 
+* Start with the most general dataset with crude analyses before 
 subsetted or stratified analyses
 
+<!-- Rule 3 -->
+# Prepare data first {.tabset .tabset-fade .tabset-pills}
 
-### 3. Prepare the data early
+## Overview
 
-**Data preparation includes creating new columns, manipulating data, and formatting,
+* **Data preparation includes creating new columns, manipulating data, and formatting,
 corrections to spelling, dates, and formatting** Document all changes to the 
 underlying data in a dedicated section before any analyses.
-
-</br>
-Define, create, and describe all new and manipulated dataset columns before 
+* Define, create, and describe all new and manipulated dataset columns before 
 starting the analysis
 
-### 4. Follow standard naming conventions
+## Example 
+
+#### Add new variables
+
+* `top_zones` which retains the top 7 health zones (with
+most cases since the beginning of the outbreak), and pool everything else into
+'others'.
+
+* `top_zones_recent_report` which retains the top 7 health zones with 
+the most cases in the past 21 days by or date of report.
+
+* `top_zones_recent_onset` which retains the top 7 health zones with 
+the most cases in the past 21 days by or date of report.
+
+```{r eval = FALSE}
+
+## Major health zones
+## Defined for the entire outbreak, and for the last 21 days
+
+recent_date <- database_date - 21
+recent_report <- x$date_report >= recent_date
+recent_onset <- x$date_onset >= recent_date
+
+x <- x %>%
+  mutate(top_zones = top_values(zone_de_sante, 6),
+         top_zones_recent_report =
+           top_values(zone_de_sante, 6, subset = recent_report),
+         top_zones_recent_onset =
+           top_values(zone_de_sante, 6, subset = recent_onset))
+
+
+## force level order for transmission place
+levels(x$transmission_place_group) <-  c("multiple", 
+                                         "non_enregistre",
+                                         "communautaire",
+                                         "nosocomial")
+
+## Community death
+x <- x %>% mutate(community_death =
+                    ifelse(type_death == "community", "oui", "non"),
+                  community_death = factor(community_death,
+                                           levels = c("oui", "non")))
+
+## Force levels for contact status
+x <- x %>% mutate(report_status =
+                    factor(report_status,
+                           levels = c("dead", "inconnu", "alive")))
+                  
+
+```
+
+
+<!-- Rule 4 -->
+# Follow standard naming conventions {.tabset .tabset-fade .tabset-pills}
 
 Predictable naming helps streamline writing and reviewing code
 * *column names* should be lower snake case in utf-8 format without any special
 characters or acccents (ex: Use;  `Unité âge (mois, années)` )
 
-### 5. Show uncertainty
+<!-- Rule 5 -->
+# Show uncertainty {.tabset .tabset-fade .tabset-pills}
 
+## Overview
 Confidence intervals should be used: 
 
-1. to represet the uncertainty around generalisability from sample to population
-2. to represent uncertainty and variable conditions in data collection
-3. predictions and imputations
+* to represet the uncertainty around generalisability from sample to population
+* to represent uncertainty and variable conditions in data collection
+* on predictions and imputations
 
 
 
@@ -101,7 +152,7 @@ Confidence intervals should be used:
                                                   |No|-- **Ask a statistician!**
 ```
 
-
+## Example
 
 ```{r eval = TRUE, fig.height = 1.5, fig.width = 4, fig.pos = "center"}
 ebola_sim <- readRDS(here::here("data", "raw", "outbreaks_ebola_sim_list.rds"))
@@ -115,7 +166,8 @@ print(fit.both)
 
 ```
 
-### 6. Code systematically
+<!-- Rule 6 -->
+# Code systematically {.tabset .tabset-fade .tabset-pills}
 
 Be consistent in functions in libraries used
 
@@ -126,8 +178,8 @@ package and how it works.
 * for example choose between `n()`, `tally()`, and `count()` when summarizing 
 grouped data
 
-
-### 7. Always use relative paths
+<!-- Rule 7 -->
+# Always use relative paths {.tabset .tabset-fade .tabset-pills}
 
 Absolute paths will not work when the code is run on other computers. Use the
 `here` library with R project files to establish a root directory
@@ -142,7 +194,8 @@ read.csv("P://user/specific/path/to/shared/directory/data/file_name.csv")
 
 ```
 
-### 8. Version and archive documents
+<!-- Rule 8 -->
+# Version and archive documents {.tabset .tabset-fade .tabset-pills}
 
 Use semantic versioning in a clearly organized, standardized file structure
 
@@ -161,12 +214,14 @@ Use semantic versioning in a clearly organized, standardized file structure
 
 ```
 
-### 9. Use descriptive naming
+<!-- Rule 9 -->
+# Use descriptive naming {.tabset .tabset-fade .tabset-pills}
 
 Variables, functions, and data sets should be named in a way that describes the 
 object
 
-### 10. Prepare presentation-ready plots
+<!-- Rule 10 -->
+# Prepare presentation-ready plots {.tabset .tabset-fade .tabset-pills}
 
 **Plots should be ready to copy and paste into an official presentation**
 
@@ -176,8 +231,8 @@ object
 * avoid overlapping labels or other features
 
 
-
-### 11. Always have your code reviewed
+<!-- Rule 11 -->
+# Always have your code reviewed {.tabset .tabset-fade .tabset-pills}
 
 Ensure that:
 
@@ -187,10 +242,11 @@ local collaborators should be included and acknowledged
 * R code is readable and correctly implements methodology 
 * markdown and the report document are well organized and properly formatted
 
-### 12. Keep data safe
+<!-- Rule 12 -->
+# Keep data safe {.tabset .tabset-fade .tabset-pills}
 
-Respect the privacy of the individuals described in the data
+* Respect the privacy of the individuals described in the data
 
-Never label data as anonomysed without complying with best practices of the
+* Never label data as anonomysed without complying with best practices of the
 standards and methods of anonymyzation (and clear final product with a 
 qualified statistician)
