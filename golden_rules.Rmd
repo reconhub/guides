@@ -154,21 +154,40 @@ Confidence intervals should be used:
 
 ## Example
 
-```{r eval = TRUE, fig.height = 4, fig.width = 8, fig.pos = "center"}
-ebola_sim <- readRDS(here::here("data", "raw", "outbreaks_ebola_sim_list.rds"))
-date_onset <- ebola_sim$linelist$date_of_onset
+Let us make some toy data, and plot a trend **without showing dispersion** in
+the data:
 
-i.7 <- incidence::incidence(date_onset, interval = "1 week")
-fit.both <- fit(i.7, split = as.Date("2014-10-15"))
-plot(i.7, fit = fit.both) +
-  labs(title = "Example Plot with Confidence Intervals") +
-  theme(text = element_text(size = 16),
-        axis.text = element_text(size = 14))
-  
+```{r example_uncertainty, fig.width = 4, fig.height = 4, fig.pos = "center"}
 
-print(fit.both)
+set.seed(1)
+x <- rep(1:50, each = 15)
+y <- rnorm(length(x), mean = 1)
+df <- data.frame(x, y)
+
+ggplot(df, aes(x = x, y = y)) +
+  theme_bw() +
+  geom_smooth() +
+  labs(title = "Is there a trend here?")
 
 ```
+
+Looking at this graph, **we may think there is a downward trend**, and start
+interpreting what it means etc. Data have been generated in such a way that
+there is no correlation between the two variables. This would be obvious if we
+add the data, thereby representing the variability in the data:
+
+```{r example_uncertainty_2, fig.width = 4, fig.height = 4, fig.pos = "center"}
+
+ggplot(df, aes(x = x, y = y)) +
+  theme_bw() +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "No, there is not!")
+
+```
+
+
+
 
 <!-- Rule 6 -->
 # Code systematically {.tabset .tabset-fade .tabset-pills}
