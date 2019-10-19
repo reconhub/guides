@@ -12,7 +12,7 @@ output:
     toc_collapse: no
     toc_depth: 2
     toc_float: yes
-    # css: !expr here::here('css', 'style.css')
+    css: !expr here::here('css', 'style.css')
 ---
 
 ```{r setup, include=FALSE}
@@ -61,7 +61,7 @@ subsetted or stratified analyses
 # Prepare data first {.tabset .tabset-fade .tabset-pills}
 
 ## Overview
-
+w
 * **Data preparation includes creating new columns, manipulating data, and formatting,
 corrections to spelling, dates, and formatting** Document all changes to the 
 underlying data in a dedicated section before any analyses.
@@ -157,7 +157,7 @@ Confidence intervals should be used:
 Let us make some toy data, and plot a trend **without showing dispersion** in
 the data:
 
-```{r example_uncertainty, fig.width = 4, fig.height = 4, fig.pos = "center"}
+```{r rule_5, fig.width = 4, fig.height = 4, fig.pos = "center"}
 
 set.seed(1)
 x <- rep(1:50, each = 15)
@@ -172,11 +172,12 @@ ggplot(df, aes(x = x, y = y)) +
 ```
 
 Looking at this graph, **we may think there is a downward trend**, and start
-interpreting what it means etc. Data have been generated in such a way that
-there is no correlation between the two variables. This would be obvious if we
-add the data, thereby representing the variability in the data:
+interpreting what it means etc. **In fact, this is purely artifactual**. Data
+have been generated in such a way that there is no correlation between the two
+variables. This would be obvious if we add the data, thereby representing the
+variability in the data:
 
-```{r example_uncertainty_2, fig.width = 4, fig.height = 4, fig.pos = "center"}
+```{r rule_5_2, fig.width = 4, fig.height = 4, fig.pos = "center"}
 
 ggplot(df, aes(x = x, y = y)) +
   theme_bw() +
@@ -189,8 +190,12 @@ ggplot(df, aes(x = x, y = y)) +
 
 
 
+
+
 <!-- Rule 6 -->
 # Code systematically {.tabset .tabset-fade .tabset-pills}
+
+## Overview
 
 Be consistent in functions in libraries used
 
@@ -198,8 +203,79 @@ Be consistent in functions in libraries used
 column names and values, etc. Take the time to understand how to use this 
 package and how it works.
 
-* for example choose between `n()`, `tally()`, and `count()` when summarizing 
+* for example choose between `n()`, `tally()`, and `count()` when summarizing
 grouped data
+
+
+
+## Example
+
+Let's look at some basic code to count cases by location, gender and outcomes on
+the MERS dataset from the `outbreaks` package.
+
+```{r rule_6}
+
+mers <- outbreaks::mers_korea_2015$linelist %>%
+  as_tibble()
+
+# 2x2 table 1: location / sex
+mers %>%
+  group_by(place_infect, sex) %>%
+  summarise(n = n())
+
+## 2x2 table 2: location / outcome
+loc_out_tab <- count(mers, place_infect, outcome)
+loc_out_tab
+
+##################################
+## 2x2 table 3: location / outcome
+##################################
+table_sex_outcome <- with(mers, table(sex, outcome)) %>% as.data.frame() %>% as_tibble
+table_sex_outcome
+
+```
+
+The code is correct, but there are plenty of consistency issues here; to name a
+few:
+
+* using 3 different approaches to construct the 2x2 tables
+
+* not using the piping operator ` %>% ` in table 2, but using it elsewhere
+
+* annotations are not consistent
+
+* not going back to a new line after the piping operators for table 3
+
+* in table 3, not using parenthesis for `as_tibble`, but using them for
+  `as.data.frame()`
+
+* storing the 2nd and 3rd table as objects, but not for the 1st one
+
+* using different naming conventions: table 2 is abbreviated and `tab` comes
+  last, whilst table 3 is explicit and `table` comes first in the name
+  
+A more consistent version of the code would look like:
+
+```{r rule_6_2}
+
+## 2x2 table 1: location / sex
+table_location_sex <- mers %>%
+  count(place_infect, sex)
+table_location_sex
+
+## 2x2 table 2: location / outcome
+table_location_outcome <- mers %>%
+  count(place_infect, outcome)
+table_location_outcome
+
+## 2x2 table 3: location / outcome
+table_sex_outcome <- mers %>%
+  count(sex, outcome)
+table_sex_outcome
+
+```
+
+
 
 <!-- Rule 7 -->
 # Always use relative paths {.tabset .tabset-fade .tabset-pills}
@@ -209,13 +285,16 @@ Absolute paths will not work when the code is run on other computers. Use the
 
 ```{r eval = FALSE}
 
-# Use:
-read.csv(here::here("/data/file_name.csv")
-
-# NOT:
+## NOT:
 read.csv("P://user/specific/path/to/shared/directory/data/file_name.csv")
 
+## Use:
+read.csv(here::here("data", "file_name.csv")
+
+
 ```
+
+
 
 <!-- Rule 8 -->
 # Version and archive documents {.tabset .tabset-fade .tabset-pills}
