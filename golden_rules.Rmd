@@ -15,7 +15,7 @@ output:
     css: !expr here::here('css', 'style.css')
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       collapse = TRUE,
                       fig.width = 8,
@@ -38,86 +38,128 @@ for (file in scripts_files) if (!file == load_dictionary) source(file)
 ```
 
 
+
 <!-- Rule 1 -->
-# Write for your audience {.tabset .tabset-fade .tabset-pills}
+# Organize your document logically {.tabset .tabset-fade .tabset-pills}
 
-* Make sure your report or exported data will be useful for your audience
-* Know your audience's baseline understanding of the subject matter and statistical
-methods, and annotate results as needed.
-* All data manipulation, statistical methodology, results, etc should be clear 
-without reading the code. Include formulas in the text when appropriate.
+A clear structure is essential for readers to understand and navigate your
+analysis document. We recommend the following structure:
 
-<!-- Rule 2 -->
-# Organize your document and each section {.tabset .tabset-fade .tabset-pills}
+* Data preparation
+* Analysis of *xxx*
+* Analysis of *yyy*
+* ...
+* Export outputs
+* (Optionally) System information
 
-* Structure the document in a way that will make the most sense to the reader
-* Fully contain each step of the process into one section and use subsections 
-to organize the code (aviod distributing the steps of an analysis to different
-sections throughout the document)
-* Start with the most general dataset with crude analyses before 
-subsetted or stratified analyses
-
-<!-- Rule 3 -->
-# Prepare data first {.tabset .tabset-fade .tabset-pills}
-
-## Overview
-w
-* **Data preparation includes creating new columns, manipulating data, and formatting,
-corrections to spelling, dates, and formatting** Document all changes to the 
-underlying data in a dedicated section before any analyses.
-* Define, create, and describe all new and manipulated dataset columns before 
-starting the analysis
-
-## Example 
-
-#### Add new variables
-
-* `top_zones` which retains the top 7 health zones (with
-most cases since the beginning of the outbreak), and pool everything else into
-'others'.
-
-* `top_zones_recent_report` which retains the top 7 health zones with 
-the most cases in the past 21 days by or date of report.
-
-* `top_zones_recent_onset` which retains the top 7 health zones with 
-the most cases in the past 21 days by or date of report.
-
-```{r eval = FALSE}
-
-## Major health zones
-## Defined for the entire outbreak, and for the last 21 days
-
-recent_date <- database_date - 21
-recent_report <- x$date_report >= recent_date
-recent_onset <- x$date_onset >= recent_date
-
-x <- x %>%
-  mutate(top_zones = top_values(zone_de_sante, 6),
-         top_zones_recent_report =
-           top_values(zone_de_sante, 6, subset = recent_report),
-         top_zones_recent_onset =
-           top_values(zone_de_sante, 6, subset = recent_onset))
+Where the analyses of *xxx*, *yyy*, ... should have identical structures, if
+possible.
 
 
-## force level order for transmission place
-levels(x$transmission_place_group) <-  c("multiple", 
-                                         "non_enregistre",
-                                         "communautaire",
-                                         "nosocomial")
 
-## Community death
-x <- x %>% mutate(community_death =
-                    ifelse(type_death == "community", "oui", "non"),
-                  community_death = factor(community_death,
-                                           levels = c("oui", "non")))
+## Data preparation
 
-## Force levels for contact status
-x <- x %>% mutate(report_status =
-                    factor(report_status,
-                           levels = c("dead", "inconnu", "alive")))
-                  
+We recommend the following structure:
+
+* **Load packages needed**
+
+* **Load the raw data**
+
+* **Clean the raw data** 
+    + *standardise data* (e.g. `linelist::clean_data`)
+    + *convert dates* that need converting (e.g. `linelist::guess_dates`)
+    + *fix typos* (e.g. `linelist::clean_variable_spelling`)
+
+* **Add new variables** (e.g. using `mutate`)
+
+* **Subset entries** (rows) of the data (e.g. using `filter`)
+
+* **Define custom colors** (e.g. using `scale_fill_manual` or `scale_color_manual`)
+
+
+
+## Data analysis
+
+Organise the work in a systematic way, using one sub-section per type of
+analysis, and starting with general analyses before subsetted or stratified
+ones.
+
+The following workflow should apply to most cases:
+
+* **Data manipulations and computations**: this part will derive numbers and metrics
+  needed by the analysis
+  
+* **Graphics**: graphical display of the results; we recommend using *ggplot2* where
+  possible
+
+* **Table**: a table providing numbers matching the graphics, and useful summary
+  statistics, e.g. means, medians, confidence intervals, etc.
+
+
+
+## Export outputs
+
+As a rule, we recommend to export every table displayed in the document to a
+`.xlsx` and/or `.rds` files, so that they can be used in further analyses in R
+(`.rds` file) or using other software. (`.xlsx` file). We recommend `.xlsx` over
+text-based formats (e.g. `.txt`, `.csv`) as it preserves variable types.
+
+The following code exports all tables named in `to_report` to `xslx` files,
+stored inside the folder `produced_xlsx`; replace `xlsx` with `rds` for R files,
+but in this case, do not insert the links as `rds` files cannot be opened within
+a web browser (they are compressed binary representations of the data):
+
+```{r xlsx_exports, eval = FALSE}
+
+if (!dir.exists("produced_xlsx")) {
+  dir.create("produced_xlsx")
+}
+
+to_export <- c("table_1",
+               "table_xxx",
+               "table_yyy",
+               "table_zzz")
+
+for (e in to_export) {
+  rio::export(get(e),
+              file.path("produced_xlsx",
+                        paste0(e, ".xlsx")))
+}
 
 ```
+
+The following code will create links in your document pointing to the exported
+files:
+
+```{r links, results = "asis", eval = FALSE}
+
+for (e in to_export) {
+  txt <- sprintf("- [%s.xlsx](%s.xlsx)",
+                 e,
+                 file.path("produced_xlsx",
+                           e))
+  cat(txt, sep = "\n")
+}
+
+```
+
+
+## System information
+
+This is optional, but can be useful for audit purposes, or for diagnosing issues
+in the results generated. We recommend including the following:
+
+* `Sys.info()`: basic system information
+
+* `R.version`: version of **R**
+
+* `sessionInfo()`: which packages are loaded, and which versions are they?
+
+* `params`: this list will contain optional parameters passed at compilation
+  time through the `params` argument of `compile_report` or `update_reports`
+  
+
+
 
 
 <!-- Rule 4 -->
@@ -126,6 +168,9 @@ x <- x %>% mutate(report_status =
 Predictable naming helps streamline writing and reviewing code
 * *column names* should be lower snake case in utf-8 format without any special
 characters or acccents (ex: Use;  `Unité âge (mois, années)` )
+
+
+
 
 <!-- Rule 5 -->
 # Show uncertainty {.tabset .tabset-fade .tabset-pills}
@@ -186,7 +231,6 @@ ggplot(df, aes(x = x, y = y)) +
   labs(title = "No, there is not!")
 
 ```
-
 
 
 
