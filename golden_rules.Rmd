@@ -365,65 +365,126 @@ plot_petal_length
 <!-- ===================================================== -->
 <!-- ===================================================== -->
 <!-- ===================================================== -->
-<!-- Rule 5 -->
-# Show statistical variation / uncertainty {.tabset .tabset-fade .tabset-pills}
+<!-- Rule 4 -->
+# Write simple, readable code {.tabset .tabset-fade .tabset-pills}
 
-## Overview
-Confidence intervals should be used: 
+<!-- ===================================================== -->
+## Outline
 
-* to represet the uncertainty around generalisability from sample to population
-* to represent uncertainty and variable conditions in data collection
-* on predictions and imputations
+Writing simple code is essential for enabling others (and in fact, yourself) to
+read and understand your code, identify possible issues, or propose
+improvements. Good code should be simple to read and understand. Here are some
+guidelines for producing simple, readable code:
+
+* **write short lines** (ideally less than 80 characters); many short lines are
+  much easier to read than a single, long line of code
+
+* **use intermediate variables**, e.g. when subsetting data, finding indices of
+  items to modify; define named functions rather than lambdas (i.e. anonymous,
+  on-the-fly functions used e.g. in `lapply` or `mutate`)
+  
+* **start a new line after each piping operator `%>%`**
+
+* **use indentation** to make the code readable
+
+* **describe your code**: provide a plain text description of the code, using
+  numbered steps, and then refer to these steps in the code using comments 
+  
+* **use `##` for comments**, rather than a single `#` which are indented
+  differently on different code editors
 
 
+<!-- ===================================================== -->
+## Example: breaking code in small bits
 
-```
+In this example, we use the `iris` dataset to compute summary statistics keeping
+only the `setosa` and `versicolor` species, for sepal measurements. First, some
+nasty version:
 
- -------------------------    |Yes|----- **Include Confidence Interval**
-|                         |     |  
-|     Might the value     |     |
-| observed be different   |-----|
-| with a larger sample?   |     |                 |Yes|--| **CI not required**
-|                         |     |    -----------   |
- -------------------------    |No|--| You sure? |--|
-                                     -----------   |
-                                                  |No|-- **Ask a statistician!**
-```
+```{r iris_nasty}
 
-## Example
-
-Let us make some toy data, and plot a trend **without showing dispersion** in
-the data:
-
-```{r rule_5, fig.width = 4, fig.height = 4, fig.pos = "center"}
-
-set.seed(1)
-x <- rep(1:50, each = 15)
-y <- rnorm(length(x), mean = 1)
-df <- data.frame(x, y)
-
-ggplot(df, aes(x = x, y = y)) +
-  theme_bw() +
-  geom_smooth() +
-  labs(title = "Is there a trend here?")
+lapply(iris_clean[iris_clean$species%in%c("setosa","versicolor"),grep("sepal",names(iris_clean))],summary)
 
 ```
 
-Looking at this graph, **we may think there is a downward trend**, and start
-interpreting what it means etc. **In fact, this is purely artifactual**. Data
-have been generated in such a way that there is no correlation between the two
-variables. This would be obvious if we add the data, thereby representing the
-variability in the data:
+The task is simple, but the code already complicated as too many things are
+nested within the same line. Also note the absence of spaces after `,` and
+operators, which makes the code less readable. The same code can be rewritten
+in a much clearer way, first using base R:
 
-```{r rule_5_2, fig.width = 4, fig.height = 4, fig.pos = "center"}
+```{r iris_better}
 
-ggplot(df, aes(x = x, y = y)) +
-  theme_bw() +
-  geom_point() +
-  geom_smooth() +
-  labs(title = "No, there is not!")
+## find rows to keep: species setosa and versicolor
+rows_to_keep <- iris_clean$species %in% c("setosa", "versicolor")
+
+## identify columns with 'sepal' in their name
+sepal_columns <- grep("sepal", names(iris_clean))
+
+## subset data to analyse
+sepals_setosa_versicolor <- iris_clean[rows_to_keep, sepal_columns]
+
+## get summaries 
+lapply(sepals_setosa_versicolor, summary)
 
 ```
+
+A variant using `dplyr` would be:
+
+```{r iris_dplyr}
+
+iris_clean %>%
+  filter(species %in% c("setosa","versicolor")) %>%
+  select(contains("sepal")) %>%
+  lapply(summary)
+
+```
+
+
+
+<!-- ===================================================== -->
+## Example: useless complexity
+
+Here we show some examples of un-needed complexity:
+
+```{r useless_complexity, eval = FALSE}
+
+## case 1: finding female, confirmed cases in x which have incompatible
+## admission / discharge dates
+timing_errors <- x %>%
+  filter(!((date_admission < date_discharge) %in% TRUE) & (case_type %in% "confirmed") & !is.na(sex) & sex == "female")
+
+```
+
+* **Issues in case 1**: 
+    + `%in% TRUE` is useless; it is only valid if the left-hand side operand is
+      itself already a `logical`; the comparison of a `logical` to `TRUE` is
+      itself, i.e. `a == TRUE` is the same as `a`, by definition
+    + the `!` ("not") operator is not needed; rather than identify items that do
+      not fulfill the wrong condition, it is simpler to identify those who
+      fulfill the right one
+    + several additional conditions (logical `AND`) are best separated by colons
+      in `filter` rather than `&`
+    + `%in%` is only usefull if the right-hand side operand has multiple values;
+      otherwise, `==` suffices
+    + `!is.na(sex) & sex == "female"`: the first `!is.na(sex)` is not needed as
+      `filter` takes care of `NAs`
+    + long lines are harder to read
+	
+```{r useless_complexity_fix, eval = FALSE}
+
+## case 1 alternative: finding female, confirmed cases in x which have
+## incompatible admission / discharge dates
+timing_errors <- x %>%
+  filter(date_admission >= date_discharge,
+         case_type == "confirmed",
+         sex == "female")
+
+```
+
+
+
+
+
 
 
 
@@ -432,7 +493,7 @@ ggplot(df, aes(x = x, y = y)) +
 <!-- Rule 6 -->
 # Code systematically {.tabset .tabset-fade .tabset-pills}
 
-## Overview
+## Outline
 
 Be consistent in functions in libraries used
 
@@ -450,7 +511,7 @@ grouped data
 Let's look at some basic code to count cases by location, gender and outcomes on
 the MERS dataset from the `outbreaks` package.
 
-```{r rule_6}
+```{r inconsistent}
 
 mers <- outbreaks::mers_korea_2015$linelist %>%
   as_tibble()
@@ -493,7 +554,7 @@ few:
   
 A more consistent version of the code would look like:
 
-```{r rule_6_2}
+```{r consistent}
 
 ## 2x2 table 1: location / sex
 table_location_sex <- mers %>%
@@ -514,20 +575,115 @@ table_sex_outcome
 
 
 
+
+<!-- ===================================================== --> 
+<!-- ===================================================== --> 
+<!-- ===================================================== --> 
+<!-- Rule 6 -->
+# Show statistical variation / uncertainty {.tabset .tabset-fade .tabset-pills}
+
+## Outline
+
+Variation in the data as well as the uncertainty associated to point estimates
+(e.g. mean, proportion, etc) always need to be accounted for when analysing
+data. Lack of doing so often leads to over-interpreting patterns, or to seeing
+trends where there are, in fact, none.
+
+Some guidelines can be used to avoid such issues:
+
+* try to always plot the raw data before using summary statistics
+
+* never plot results of a linear model / smoother / trend curve alone, but add
+  it to the data
+
+* when comparing summary statistics (e.g. mean, proportions) across different
+  time points or groups, use confidence intervals to show the uncertainty
+  associated with the estimation of these statistic; if unsure whether a
+  confidence interval is needed, go through the decision tree below
+
+
+
+```
+
+ -------------------------    |Yes|----- **Include Confidence Interval**
+|                         |     |  
+|     Might the value     |     |
+| observed be different   |-----|
+| with a larger sample?   |     |                 |Yes|--| **CI not required**
+|                         |     |    -----------   |
+ -------------------------    |No|--| You sure? |--|
+                                     -----------   |
+                                                  |No|-- **Ask a statistician!**
+```
+
+## Example: showing variation in the data
+
+Let us make some toy data, and plot a trend **without showing dispersion** in
+the data:
+
+```{r uncertainty_bad, fig.width = 4, fig.height = 4, fig.pos = "center"}
+
+set.seed(1)
+x <- rep(1:50, each = 15)
+y <- rnorm(length(x), mean = 1)
+df <- data.frame(x, y)
+
+ggplot(df, aes(x = x, y = y)) +
+  theme_bw() +
+  geom_smooth() +
+  labs(title = "Is there a trend here?")
+
+```
+
+Looking at this graph, **we may think there is a downward trend**, and start
+interpreting what it means etc. **In fact, this is purely artifactual**. Data
+have been generated in such a way that there is no correlation between the two
+variables. This would be obvious if we add the data, thereby representing the
+variability in the data:
+
+```{r uncertainty_good, fig.width = 4, fig.height = 4, fig.pos = "center"}
+
+ggplot(df, aes(x = x, y = y)) +
+  theme_bw() +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "No, there is not!")
+
+```
+
+
+
+
+<!-- ===================================================== --> 
+<!-- ===================================================== --> 
+<!-- ===================================================== --> 
 <!-- Rule 7 -->
 # Always use relative paths {.tabset .tabset-fade .tabset-pills}
 
-Absolute paths will not work when the code is run on other computers. Use the
-`here` library with R project files to establish a root directory
+<!-- ===================================================== --> 
+## Outline
 
-```{r eval = FALSE}
+Absolute paths point to a specific locationn on one's computer. Most likely,
+this path exists only on this computer, so that files and folders referred this
+way will not exist on other computers.
 
-## NOT:
-read.csv("P://user/specific/path/to/shared/directory/data/file_name.csv")
+The alternative is to use relative path, i.e. path defined respective to a given
+location, typically the project folder. These paths will work on any computer
+which possess a copy of the project folder. Relative path are best set using the
+`here` library with R project files to establish a root directory.
 
-## Use:
-read.csv(here::here("data", "file_name.csv")
 
+<!-- ===================================================== --> 
+## Example
+
+```{r paths, eval = FALSE}
+
+## Bad practice:
+x <- read.csv("C:/user/john_doe/secret_project/data/data_raw.csv")
+
+## Good practice, after opening R in `secret_project`:
+path_to_data <- here::here("data", "data_raw.csv") 
+x <- read.csv(path_to_data)
 
 ```
 
