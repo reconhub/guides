@@ -4,7 +4,7 @@ author: "Amy Gimma and Thibaut Jombart"
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
 output:
   html_document:
-    code_folding: hide
+    code_folding: show
     highlight: pygments
     number_sections: yes
     theme: spacelab
@@ -25,7 +25,8 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
-```{r read_scripts}
+
+```{r read_scripts, echo = FALSE}
 
 ## read scripts
 path_to_scripts <- here::here("scripts")
@@ -38,9 +39,14 @@ for (file in scripts_files) if (!file == load_dictionary) source(file)
 ```
 
 
-
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- ===================================================== -->
 <!-- Rule 1 -->
 # Organize your document logically {.tabset .tabset-fade .tabset-pills}
+
+<!-- ===================================================== -->
+## Outline
 
 A clear structure is essential for readers to understand and navigate your
 analysis document. We recommend the following structure:
@@ -57,6 +63,7 @@ possible.
 
 
 
+<!-- ===================================================== -->
 ## Data preparation
 
 We recommend the following structure:
@@ -78,6 +85,7 @@ We recommend the following structure:
 
 
 
+<!-- ===================================================== -->
 ## Data analysis
 
 Organise the work in a systematic way, using one sub-section per type of
@@ -97,6 +105,7 @@ The following workflow should apply to most cases:
 
 
 
+<!-- ===================================================== -->
 ## Export outputs
 
 As a rule, we recommend to export every table displayed in the document to a
@@ -111,15 +120,19 @@ a web browser (they are compressed binary representations of the data):
 
 ```{r xlsx_exports, eval = FALSE}
 
+## create the produced_xlsx folder if it does not exist
 if (!dir.exists("produced_xlsx")) {
   dir.create("produced_xlsx")
 }
 
+## vector of names of tables to export
+## (these need to be existing data.frames or tibbles)
 to_export <- c("table_1",
                "table_xxx",
                "table_yyy",
                "table_zzz")
 
+## export all files
 for (e in to_export) {
   rio::export(get(e),
               file.path("produced_xlsx",
@@ -133,6 +146,8 @@ files:
 
 ```{r links, results = "asis", eval = FALSE}
 
+## note: for this to work, use the options `results = "asis"` and
+## `echo = FALSE` in the code chunk header
 for (e in to_export) {
   txt <- sprintf("- [%s.xlsx](%s.xlsx)",
                  e,
@@ -144,6 +159,8 @@ for (e in to_export) {
 ```
 
 
+
+<!-- ===================================================== -->
 ## System information
 
 This is optional, but can be useful for audit purposes, or for diagnosing issues
@@ -162,18 +179,194 @@ in the results generated. We recommend including the following:
 
 
 
-<!-- Rule 4 -->
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- Rule 2 -->
 # Follow standard naming conventions {.tabset .tabset-fade .tabset-pills}
 
-Predictable naming helps streamline writing and reviewing code
-* *column names* should be lower snake case in utf-8 format without any special
-characters or acccents (ex: Use;  `Unité âge (mois, années)` )
+<!-- ===================================================== -->
+## Outline
+
+Consistent and predictable naming helps streamline writing and reviewing
+code. We recommend using the following conventions, already used to a large
+extent in package development:
+
+* **use only**: lower case letters, numbers, and `_` as separator (only use `-` for dates)
+
+* **never use**: special characters in file names, variable names or values such as
+  `éÈçôï\/# %?!&:;,@*^` and blank spaces
+
+* if you really need to, only **use special characters only when defining labels**
+  for graphics or tables
+  
+* **for dates**: use the format `yyyy-mm-dd`, e.g. `2001-10-13` for the 13th October
+  2001.
+
+* **for encoding**: use `UTF-8` encoding whenever possible, as it guarantees
+  that special characters will display correctly on different computers
+
+Note that all of these points, except for the encoding, will be achieved by
+using `linelist::clean_data` on your `data.frame` or `tibble`.
+ 
+
+
+## Example1: clean *vs* messy
+
+The following data is messy for many reasons, as it violates all the above:
+
+```{r messy}
+
+messy <- linelist::messy_data(n = 10) %>% select(1:5)
+messy
+
+```
+
+A clean version of this would be:
+
+```{r clean_data}
+
+clean <- clean_data(messy)
+clean
+
+```
+
+
+## Example 2: special characters in graphics
+
+Here we show how we can make exceptions to the naming conventions when
+displaying graphics, without actually altering the data. We use the Korean MERS
+dataset from the [*outbreaks*](https://www.repidemicsconsortium.org/outbreaks)
+package, and use French labels to justify the accents:
+
+```{r special_characters_graphics}
+
+## load and clean data
+mers <- outbreaks::mers_korea_2015$linelist %>%
+  as_tibble() %>%
+  clean_data()
+
+mers
+
+## define scales for sex and outcome, tweak labels as appropriate
+scale_sex <- scale_fill_manual(
+    "Sexe",
+    values = c(m = "navy", f = "salmon"),
+    labels = c(m = "Homme", f = "Femme"))
+
+scale_x_outcome <- scale_x_discrete(
+    labels = c(alive = "Vivant",
+               dead = "Décédé"))
+
+## make the plot
+ggplot(mers, aes(x = outcome, fill = sex)) +
+  geom_bar(position = "dodge") +
+  scale_sex +
+  scale_x_outcome +
+  labs(title = "Issue de la maladie par sexe",
+       x = "",
+       y = "Nombre de cas")
+
+```
+
+Here, we are using accents, spaces, and upper-case letters for the graphics, but
+because we restrict these to labels used in `scales`, the data remain clean,
+respecting naming conventions.
 
 
 
 
+
+
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- Rule 3 -->
+# Use descriptive naming {.tabset .tabset-fade .tabset-pills}
+
+<!-- ===================================================== -->
+## Outline
+
+All files and **R** objects should be named in an explicit way. There is a
+trade-off between the length of a variable and explicit naming, but clarity is
+often, if not always preferrable. Some exceptions can be made, e.g. by
+systematically calling `x` your data.
+
+
+<!-- ===================================================== -->
+## Example
+
+Here is an example of poor naming:
+
+```{r naming_example_bad}
+
+i <- iris %>%
+  clean_data()
+tab <- i %>%
+  count(species)
+tab
+
+tab_2 <- i %>%
+  group_by(species) %>%
+  summarise_all(mean)
+tab_2
+
+
+a <- ggplot(i, aes(x = petal_width)) +
+  geom_density(aes(fill = species), alpha = .4)
+a
+
+b <- ggplot(i, aes(x = petal_length)) +
+  geom_density(aes(fill = species), alpha = .4)
+b
+
+```
+
+This code is bad because:
+
+* `iris`, the name of the dataset, is uselessly renamed to `i`, with no
+  indication that the data has been cleaned
+
+* `tab` and `tab_2` suggest these are *tables*, but provides no indication as to
+  what they contain
+
+* `a` and `b` are plots, but the name does not indicate that they are, or what
+  the plots are about
+
+A better version would be:
+
+```{r naming_example_good}
+
+iris_clean <- iris %>%
+  clean_data()
+
+table_species_counts <- iris_clean %>%
+  count(species)
+table_species_counts
+
+table_species_means <- iris_clean %>%
+  group_by(species) %>%
+  summarise_all(mean)
+table_species_means
+
+plot_petal_width <- ggplot(iris_clean, aes(x = petal_width)) +
+  geom_density(aes(fill = species), alpha = .4)
+plot_petal_width
+
+plot_petal_length <- ggplot(iris_clean, aes(x = petal_length)) +
+  geom_density(aes(fill = species), alpha = .4)
+plot_petal_length
+
+```
+
+
+
+
+<!-- ===================================================== -->
+<!-- ===================================================== -->
+<!-- ===================================================== -->
 <!-- Rule 5 -->
-# Show uncertainty {.tabset .tabset-fade .tabset-pills}
+# Show statistical variation / uncertainty {.tabset .tabset-fade .tabset-pills}
 
 ## Overview
 Confidence intervals should be used: 
@@ -360,11 +553,6 @@ Use semantic versioning in a clearly organized, standardized file structure
 
 ```
 
-<!-- Rule 9 -->
-# Use descriptive naming {.tabset .tabset-fade .tabset-pills}
-
-Variables, functions, and data sets should be named in a way that describes the 
-object
 
 <!-- Rule 10 -->
 # Prepare presentation-ready plots {.tabset .tabset-fade .tabset-pills}
