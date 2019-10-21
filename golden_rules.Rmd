@@ -448,14 +448,14 @@ Here we show some examples of un-needed complexity:
 
 ```{r useless_complexity, eval = FALSE}
 
-## case 1: finding female, confirmed cases in x which have incompatible
+## task: finding female, confirmed cases in x which have incompatible
 ## admission / discharge dates
 timing_errors <- x %>%
   filter(!((date_admission < date_discharge) %in% TRUE) & (case_type %in% "confirmed") & !is.na(sex) & sex == "female")
 
 ```
 
-* **Issues in case 1**: 
+* **Issues in the code**: 
     + `%in% TRUE` is useless; it is only valid if the left-hand side operand is
       itself already a `logical`; the comparison of a `logical` to `TRUE` is
       itself, i.e. `a == TRUE` is the same as `a`, by definition
@@ -472,7 +472,7 @@ timing_errors <- x %>%
 	
 ```{r useless_complexity_fix, eval = FALSE}
 
-## case 1 alternative: finding female, confirmed cases in x which have
+## alternative version: finding female, confirmed cases in x which have
 ## incompatible admission / discharge dates
 timing_errors <- x %>%
   filter(date_admission >= date_discharge,
@@ -483,8 +483,108 @@ timing_errors <- x %>%
 
 
 
+<!-- ===================================================== -->
+## Example: fixing typos / recoding variables
 
+In this example, we recode values of a variable `sex` with different
+mis-spellings, using different approaches, starting with a complicated one.
 
+```{r recoding-bad}
+
+values <- c("m", NA, "Male", "fem", "F", "female", "male", "femme")
+x <- data.frame(sex = sample(values, 20, replace = TRUE))
+x
+
+## one-line version - ugly
+x %>% mutate(sex_clean = ifelse(sex == "m", "male", ifelse(is.na(sex), "unknown", ifelse(sex == "Male", "male", ifelse(sex == "fem", "female", ifelse(sex == "F", "female", ifelse(sex == "female", "female", ifelse(sex == "femme", "female", ifelse(sex == "male", "male", NA_character_)))))))))
+
+```
+
+```{r recoding-bad-indent}
+
+## variant with indentation - still bad
+x %>% mutate(sex_clean = ifelse(sex == "m", "male",
+                           ifelse(is.na(sex), "unknown",
+                             ifelse(sex == "Male", "male",
+                               ifelse(sex == "fem", "female",
+                                 ifelse(sex == "F", "female",
+                                   ifelse(sex == "female", "female",
+                                     ifelse(sex == "femme", "female",
+                                       ifelse(sex == "male", "male", NA_character_)))))))))
+
+```
+
+The code above works, but is utterly unreadable, even when indented
+properly. This causes multiple problems:
+
+* near **impossible to identify mistakes** as the code is very hard to digest
+
+* **very hard to expand** the code to account for new typos
+
+* code produced is very long, which means **doing this for multiple variables and
+  typos will be a problem**
+  
+As a rule, nested `ifelse` statements should always be avoided. As a
+replacement, one can use `case_when`:
+
+```{r case_when}
+
+x %>% mutate(sex_clean = case_when(
+                 sex == "m" ~ "male",
+                 sex == "Male" ~ "male",
+                 sex == "fem" ~ "female",
+                 sex == "F" ~ "female",
+                 sex == "femme" ~ "female",
+                 sex == "female" ~ "female",
+                 sex == "male" ~ "male",
+                 TRUE ~ NA_character_
+             ))
+
+```
+
+This code is simpler and more readable, but can still be improved. Yet another
+alternative is offered by `linelist::clean_data`, which can use cleaning rules
+to fix typos or recode variables. The procedure includes:
+
+1. standardising data using `clean_data` to remove capitalisation issues, which
+   simplifies the cleaning rules (e.g. no need to change `Male` to `male`)
+
+2. defining cleaning rules for a variable (ideally in a separate Excel
+   spreadsheet); note that because `clean_variable_spelling` already
+   standardises entries, all spelling will be in lower-case,
+   
+3. apply these cleaning rules to the variable using  `linelist::clean_spelling` 
+
+Let us illustrate this:
+
+```{r clean_variable_spelling}
+
+## load and show cleaning rules
+cleaning_rules_file <- here::here("data", "cleaning_rules.xlsx")
+cleaning_rules <- rio::import(cleaning_rules_file)
+cleaning_rules
+
+## clean data and apply cleaning rules
+x %>%
+  clean_data() %>%
+  mutate(sex_clean = clean_spelling(sex, wordlist = cleaning_rules))
+
+```
+
+In practice, cleaning rules can be passed to `clean_data` directly, in which
+cases variables for which cleaning rules are defined will be automatically
+cleaned:
+
+```{r clean_data_with_rules}
+
+## generate clean dataset
+x_clean <- x %>%
+  clean_data(wordlists = cleaning_rules)
+
+## compare old `x` and `x_clean`
+cbind(x, x_clean)
+
+```
 
 
 
