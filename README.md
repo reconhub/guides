@@ -12,8 +12,8 @@ Recon or using Recon packages
 
 1. <a href="https://github.com/reconhub/guides/raw/master/golden_rules.html.zip"
    download="golden_rules.html.zip" target="_blank">Golden Rules</a> for
-   reproducible statistical analysis (right-click on the link, **download the
-   file** and then open it in a web browser)
+   reproducible statistical analysis (**download** the file, **unzip** it and
+   then open it in a web browser)
 
 
 ### Coming soon
