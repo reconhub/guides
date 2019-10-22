@@ -10,7 +10,7 @@ Recon or using Recon packages
 
 ### Documents
 
-1. Golden Rules for Reproducable Statistical Analyses
+1. [Golden Rules](https://github.com/reconhub/guides/raw/master/golden_rules.html) for Reproducable Statistical Analyses
 
 
 ### Coming soon
