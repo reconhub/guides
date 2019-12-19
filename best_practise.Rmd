@@ -43,13 +43,14 @@ knitr::opts_chunk$set(echo = TRUE,
 # Tests
 - Tests should be written prior to the code.
 - Basic tests should test defaults first and foremost.
+- Test coverage should be as comprehensive as possible
 
 # Functions
 - Follow the coding rules in the `golden_rules` document
 - Functions should be clearly commented 
 - Internal functions should be tagged as so
 - Commented out code should be removed to improve readability.
-- All comments both internal and external should have roxygen documentation
+- All fucntions both internal and external should have roxygen documentation
   - As a minimum internal functions should include a context e.g. #' This function is designed to...
 
 - Avoid using personal/colloquial language when writing comments and context - non-RECON users need to understand too.
