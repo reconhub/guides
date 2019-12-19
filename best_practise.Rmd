@@ -1,0 +1,69 @@
+---
+title: "Best Practise for R Package Creation"
+author: "Ellen Talbot - Locke Data"
+date: "`r format(Sys.time(), '%A %d %B %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: pygments
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_collapse: no
+    toc_depth: 2
+    toc_float: yes
+    css: !expr here::here('css', 'style.css')
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      collapse = TRUE,
+                      fig.width = 8,
+                      fig.height = 6,
+                      dpi = 150,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+# README
+- Ensure the use of non-RECON user friendly language, try not to refer to internal processes etc. 
+- Incude a clearly defined workflow and justification for using the package
+  - Include an elevator pitch and examples of where and why the package has been used - this all improves trust for the user.
+    - E.g. "You’re in DRC, have low internet connection, are working on X situation..."
+  
+# Contributing Guidelines
+- Contributing guidelines should be included in each package repo, there is a good example at `reportfactory/CONTRIBUTING.md`.
+  
+# Issue  and Pull Request Templates
+- Issue and PR templates should be included in each package repo, there is a good example at `reportfactory/.github`.
+
+**Guidelines and templates all improve the chances of you having a more manageable workload and a great relationship with helpful contributors!** 
+
+# Tests
+- Tests should be written prior to the code.
+- Basic tests should test defaults first and foremost.
+
+# Functions
+- Follow the coding rules in the `golden_rules` document
+- Functions should be clearly commented 
+- Internal functions should be tagged as so
+- Commented out code should be removed to improve readability.
+- All comments both internal and external should have roxygen documentation
+  - As a minimum internal functions should include a context e.g. #' This function is designed to...
+
+- Avoid using personal/colloquial language when writing comments and context - non-RECON users need to understand too.
+
+- Examples for functions should appear in the roxygen comments rather than the README
+
+# Final checks 
+- devtools::check()
+* R CMD should pass
+
+- goodpractise::gp()
+
+- lintr::lint_package()
+* Remove trailing white spaces 
+
+- devtools::spell_check() 
+* Catch spelling errors 
