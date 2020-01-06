@@ -1,5 +1,5 @@
 ---
-title: "Best Practise for R Package Creation"
+title: "Best Practice for R Package Creation"
 author: "Ellen Talbot - Locke Data"
 date: "`r format(Sys.time(), '%A %d %B %Y')`"
 output:
@@ -25,46 +25,48 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
+This is a high-level checklist for RECON packages that is backed by the broader information included in [rOpenSci Packages: Development, Maintenance, and Peer Review](https://devguide.ropensci.org/) and [R Packages: Organize, Test, Document, and Share Your Code](http://r-pkgs.had.co.nz/). Fundamentally, we want to write packages that people can use to support their work and make an impact. Our "audience" includes people with different levels of R skill and time to learn how to use a package so most of our guidelines are about helping you thinking about how you can make your package robust, error free, and accessible.
 
-# README
+# Package contents
+## README
 - Ensure the use of non-RECON user friendly language, try not to refer to internal processes etc. 
 - Incude a clearly defined workflow and justification for using the package
   - Include an elevator pitch and examples of where and why the package has been used - this all improves trust for the user.
     - E.g. "You’re in DRC, have low internet connection, are working on X situation..."
-  
-# Contributing Guidelines
-- Contributing guidelines should be included in each package repo, there is a good example at `reportfactory/CONTRIBUTING.md`.
-  
-# Issue  and Pull Request Templates
-- Issue and PR templates should be included in each package repo, there is a good example at `reportfactory/.github`.
 
-**Guidelines and templates all improve the chances of you having a more manageable workload and a great relationship with helpful contributors!** 
-
-# Tests
-- Tests should be written prior to the code.
-- Basic tests should test defaults first and foremost.
-- Test coverage should be as comprehensive as possible
-
-# Functions
+## Functions
 - Follow the coding rules in the `golden_rules` document
 - Functions should be clearly commented 
 - Internal functions should be tagged as so
 - Commented out code should be removed to improve readability.
-- All fucntions both internal and external should have roxygen documentation
+- All functions both internal and external should have roxygen documentation
   - As a minimum internal functions should include a context e.g. #' This function is designed to...
-
 - Avoid using personal/colloquial language when writing comments and context - non-RECON users need to understand too.
-
 - Examples for functions should appear in the roxygen comments rather than the README
 
-# Final checks 
-- devtools::check()
-* R CMD should pass
+## Tests
+- Tests should be written prior to the code.
+- Basic tests should test defaults first and foremost.
+- Test coverage should be as comprehensive as possible
 
-- goodpractise::gp()
+## Quality checks
+Use packages like {devtools}, {lintr}, and {goodpractice} to ensure your code passes quality checks, correct spellings, and meets common formatting standards.
 
-- lintr::lint_package()
-* Remove trailing white spaces 
+```r
+devtools::check()
+goodpractice::gp()
+lintr::lint_package()
+devtools::spell_check() 
+```
 
-- devtools::spell_check() 
-* Catch spelling errors 
+# Collaboration
+  
+## Contributing Guidelines
+- Contributing guidelines should be included in each package repo, there is a good example at `reportfactory/CONTRIBUTING.md`.
+  
+## Issue and Pull Request Templates
+- Issue and PR templates should be included in each package repo, there is a good example at `reportfactory/.github`.
+
+**Guidelines and templates all improve the chances of you having a more manageable workload and a great relationship with helpful contributors!** 
+
+
