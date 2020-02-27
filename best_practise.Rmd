@@ -30,9 +30,9 @@ This is a high-level checklist for RECON packages that is backed by the broader 
 # Package contents
 ## README
 - Ensure the use of non-RECON user friendly language, try not to refer to internal processes etc. 
-- Incude a clearly defined workflow and justification for using the package
-  - Include an elevator pitch and examples of where and why the package has been used - this all improves trust for the user.
-    - E.g. "You’re in DRC, have low internet connection, are working on X situation..."
+- Include a clearly defined "happy path" workflow that includes enough code to demonstrate the basic workflow 
+- Clearly state what problem your package is solving and why someone should use it
+  + Include an elevator pitch and examples of where and why the package has been used e.g. "You’re in DRC, have low internet connection, are working on X situation..."
 
 ## Functions
 - Follow the coding rules in the `golden_rules` document
@@ -40,14 +40,16 @@ This is a high-level checklist for RECON packages that is backed by the broader 
 - Internal functions should be tagged as so
 - Commented out code should be removed to improve readability.
 - All functions both internal and external should have roxygen documentation
-  - As a minimum internal functions should include a context e.g. #' This function is designed to...
+  + At a minimum internal (non-exported) functions should include a purpose and a brif description e.g. `#' This function is designed to...`
 - Avoid using personal/colloquial language when writing comments and context - non-RECON users need to understand too.
-- Examples for functions should appear in the roxygen comments rather than the README
+- Detailed examples for functions should appear in the roxygen comments rather than the README
 
 ## Tests
-- Tests should be written prior to the code.
-- Basic tests should test defaults first and foremost.
+- Tests should ideally be written prior to the code
+  + This could be README driven development where you write the "happy path" first and expected results, or more robustly, applying [Test Driven Development](http://agiledata.org/essays/tdd.html) so that you write some key tests first and then develop the function to meet those requirements outlined in the tests
+- Basic tests should test defaults first and foremost
 - Test coverage should be as comprehensive as possible
+- {testthat} is the recommended package for writing unit tests in
 
 ## Quality checks
 Use packages like {devtools}, {lintr}, and {goodpractice} to ensure your code passes quality checks, correct spellings, and meets common formatting standards.
