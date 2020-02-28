@@ -1,0 +1,81 @@
+---
+title: "Best Practice for R Package Creation"
+author: "Ellen Talbot - Locke Data"
+date: "`r format(Sys.time(), '%A %d %B %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: pygments
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_collapse: no
+    toc_depth: 2
+    toc_float: yes
+    css: !expr here::here('css', 'style.css')
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      collapse = TRUE,
+                      fig.width = 8,
+                      fig.height = 6,
+                      dpi = 150,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+This is a high-level checklist for RECON packages that is backed by the broader information included in [rOpenSci Packages: Development, Maintenance, and Peer Review](https://devguide.ropensci.org/) and [R Packages: Organize, Test, Document, and Share Your Code](http://r-pkgs.had.co.nz/). Fundamentally, we want to write packages that people can use to support their work and make an impact. Our "audience" includes people with different levels of R skill and time to learn how to use a package so most of our guidelines are about helping you thinking about how you can make your package robust, error free, and accessible.
+
+# Setup
+- We recommend that you setup your package using [{recontools}](https://github.com/reconhub/recontools)
+- You should ideally host on GitHub
+
+# Package contents
+## README
+- Ensure the use of non-RECON user friendly language, try not to refer to internal processes etc. 
+- Include a clearly defined "happy path" workflow that includes enough code to demonstrate the basic workflow 
+- Clearly state what problem your package is solving and why someone should use it
+  + Include an elevator pitch and examples of where and why the package has been used e.g. "You’re in DRC, have low internet connection, are working on X situation..."
+
+## Functions
+- Follow the coding rules in the `golden_rules` document
+- Functions should be clearly commented 
+- Internal functions should be tagged as so
+- Commented out code should be removed to improve readability.
+- All functions both internal and external should have roxygen documentation
+  + At a minimum internal (non-exported) functions should include a purpose and a brif description e.g. `#' This function is designed to...`
+- Avoid using personal/colloquial language when writing comments and context - non-RECON users need to understand too.
+- Detailed examples for functions should appear in the roxygen comments rather than the README
+
+## Tests
+- Tests should ideally be written prior to the code
+  + This could be README driven development where you write the "happy path" first and expected results, or more robustly, applying [Test Driven Development](http://agiledata.org/essays/tdd.html) so that you write some key tests first and then develop the function to meet those requirements outlined in the tests
+- Basic tests should test defaults first and foremost
+- Test coverage should be as comprehensive as possible
+- {testthat} is the recommended package for writing unit tests
+- Use `testthat::skip()` rather than commenting our tests that are problematic
+
+## Quality checks
+Use packages like {devtools}, {lintr}, and {goodpractice} to ensure your code passes quality checks, correct spellings, and meets common formatting standards.
+
+```r
+devtools::check()
+goodpractice::gp()
+lintr::lint_package()
+devtools::spell_check() 
+```
+
+# Collaboration
+## GitHub best practices
+- Our [guidelines for submitted packages to RECON](https://www.repidemicsconsortium.org/resources/guidelines/) include some great advice about how to set up an effective GitHub environment for your package
+
+## Contributing Guidelines
+- Contributing guidelines should be included in each package repo, there is a good example at `reportfactory/CONTRIBUTING.md`.
+  
+## Issue and Pull Request Templates
+- Issue and PR templates should be included in each package repo, there is a good example at `reportfactory/.github`.
+
+**Guidelines and templates all improve the chances of you having a more manageable workload and a great relationship with helpful contributors!** 
+
+
